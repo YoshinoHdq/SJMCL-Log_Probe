@@ -35,6 +35,12 @@ Completely rewritten using the official scaffolding tool, with built-in bilingua
 
 - Minimum launcher version: 1.2.0
 
+
+## Related Projects & Documentation
+
+- [SJMCL Extension Documentation](https://mc.sjtu.cn/sjmcl/dev/extension/)
+- [awesome-SJMCL-extensions](https://github.com/SJMC-Dev/awesome-SJMCL-extensions)
 ## License
 
 MIT
+
