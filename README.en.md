@@ -44,3 +44,7 @@ Completely rewritten using the official scaffolding tool, with built-in bilingua
 ## License
 
 MIT
+
+---
+
+*This plugin was developed with AI-assisted coding tools.*
