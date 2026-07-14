@@ -29,7 +29,7 @@ Completely rewritten using the official scaffolding tool, with built-in bilingua
 ## Installation
 
 1. Download the .sjmclx file from Releases
-2. Open SJMCL → Settings → Extension Management → Import
+2. Open SJMCL → Settings → Extension Management → Import. Supports file selection and drag-and-drop import
 3. Use from the home widget or extension settings page
 
 ## Compatibility
