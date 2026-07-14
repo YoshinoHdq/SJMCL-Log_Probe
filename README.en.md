@@ -23,6 +23,7 @@ Completely rewritten using the official scaffolding tool, with built-in bilingua
 - 💡 Targeted fix suggestions for each error type
 - 🌐 One-click language switching in settings panel
 - 📋 Import log files or paste content directly for analysis
+- ⚡ Click "Analyze Now" directly in the crash popup for instant analysis
 - 🏠 Quick-view latest analysis results on the home widget
 
 ## Installation
