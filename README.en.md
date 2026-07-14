@@ -2,7 +2,7 @@
 
 # Log Probe
 
-Analyze Minecraft error logs, identify common issues and provide solutions 🔍
+Analyze Minecraft error logs, identify common issues, and provide fix suggestions 🔍
 
 **English · [简体中文](README.md)**
 
@@ -10,28 +10,30 @@ Analyze Minecraft error logs, identify common issues and provide solutions 🔍
 
 ---
 
-## 简介
+## Introduction
 
-Log Probe is a SJMCL extension that automatically scans Minecraft crash logs and error reports to identify root causes and provide solutions.
+Log Probe is an SJMCL extension that automatically scans Minecraft crash logs and error reports, identifies root causes of common problems, and provides targeted fix suggestions.
+
+Completely rewritten using the official scaffolding tool, with built-in bilingual (Chinese/English) switching.
 
 ## Features
 
 - 📄 Auto-scan Minecraft error logs and crash reports
-- 🔍 Identify common error patterns (out of memory, mod conflicts, JDK version, etc.)
-- 💡 Provide targeted solutions for each error type
-- 📋 View the full log text
+- 🔍 Identify 40+ common error patterns (Out of Memory, Mod Conflicts, Render Errors, etc.)
+- 💡 Targeted fix suggestions for each error type
+- 🌐 One-click language switching in settings panel
+- 📋 Import log files or paste content directly for analysis
+- 🏠 Quick-view latest analysis results on the home widget
 
 ## Installation
 
-1. Download org.yoshino.log_probe.sjmclx from Releases
+1. Download the .sjmclx file from Releases
 2. Open SJMCL → Settings → Extension Management → Import
-3. Auto-analyzes on crash, or paste log content manually in the extension settings
-
-> ⚠️ Launcher v1.1.3 does not support direct analysis from the error log window. Please copy the log content and paste it into the extension settings page.
+3. Use from the home widget or extension settings page
 
 ## Compatibility
 
-- Minimum launcher version: 1.1.3
+- Minimum launcher version: 1.2.0
 
 ## License
 

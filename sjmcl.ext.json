@@ -1,12 +1,11 @@
 {
-  "identifier": "org.yoshino.Log_Probe",
+  "identifier": "org.yoshino.log_probe",
   "name": "Log Probe",
-  "description": "分析 Minecraft 错误日志，识别常见问题并提供解决建议。",
+  "description": "Analyze Minecraft error logs, identify common problems, and provide fix suggestions.",
   "author": "hemekewayoshino",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "frontend": {
     "entry": "frontend/index.js"
   },
-  "minimalLauncherVersion": "1.1.3"
+  "minimalLauncherVersion": "1.2.0"
 }
-
