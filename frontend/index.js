@@ -929,8 +929,139 @@ function createSettingsPage(api) {
   };
 }
 
+// src/modals/crash-analyzer.tsx
+function createCrashAnalyzer(api) {
+  const { React } = api;
+  const host = api.getHostContext();
+  const C = api.ChakraUI;
+  return function CrashAnalyzer(props) {
+    const lang = getSavedLang();
+    const _ = createT(lang);
+    const [logText, setLogText] = React.useState("");
+    const [result, setResult] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
+    const [statusText, setStatusText] = React.useState("");
+    const [instanceInfo, setInstanceInfo] = React.useState("");
+    const fileRef = React.useRef(null);
+    React.useEffect(function() {
+      var ctx = props.params;
+      var cl = lang;
+      if (ctx && ctx.summary) {
+        var si = ctx.summary;
+        setInstanceInfo(si.name + " (" + si.version + ", " + (si.modLoader?.loaderType || "Unknown") + ")");
+      }
+      if (ctx && ctx.launchingId) {
+        setStatusText(cl === "zh" ? "\u6B63\u5728\u83B7\u53D6\u6E38\u620F\u65E5\u5FD7..." : "Fetching game log...");
+        host.actions.invoke("retrieve_game_log", { launchingId: ctx.launchingId }).then(function(resp) {
+          var lines = null;
+          if (resp && typeof resp === "object") {
+            if (resp.contents && Array.isArray(resp.contents)) lines = resp.contents;
+            else if (resp.data && resp.data.contents && Array.isArray(resp.data.contents)) lines = resp.data.contents;
+            else if (resp.data && Array.isArray(resp.data)) lines = resp.data;
+          }
+          if (!lines && Array.isArray(resp)) lines = resp;
+          if (!lines && typeof resp === "string" && resp.length > 0) lines = resp.split("\n");
+          if (lines && lines.length > 0) {
+            var text = lines.join("\n");
+            setLogText(text);
+            setStatusText(cl === "zh" ? "\u6B63\u5728\u5206\u6790..." : "Analyzing...");
+            var r = analyzeLog(text);
+            if (r && r.issues.length > 0) {
+              setResult(r);
+              setStatusText("");
+            } else {
+              setStatusText(cl === "zh" ? "\u5206\u6790\u5B8C\u6210" : "Analysis done");
+            }
+          } else {
+            var respType = typeof resp;
+            var respPreview = "";
+            try {
+              respPreview = JSON.stringify(resp).substring(0, 200);
+            } catch (e) {
+            }
+            setStatusText(cl === "zh" ? "\u54CD\u5E94\u4E3A\u7A7A(type=" + respType + ", data=" + respPreview + ")\u3002\u53EF\u624B\u52A8\u7C98\u8D34" : "Empty response(type=" + respType + ", data=" + respPreview + "). Paste manually.");
+          }
+          setLoading(false);
+        }).catch(function(err) {
+          var errMsg = typeof err === "string" ? err : err && err.message ? err.message : String(err);
+          setStatusText(cl === "zh" ? "\u83B7\u53D6\u5931\u8D25: " + errMsg : "Failed: " + errMsg);
+          setLoading(false);
+        });
+      } else {
+        setStatusText(cl === "zh" ? "\u6CA1\u6709\u5D29\u6E83\u4E0A\u4E0B\u6587\u4FE1\u606F" : "No crash context");
+        setLoading(false);
+      }
+    }, []);
+    function handleAnalyze() {
+      var text = logText.trim();
+      if (!text) return;
+      var r = analyzeLog(text);
+      if (r) setResult(r);
+    }
+    function handleFileChange(e) {
+      var file = e.target.files?.[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev) {
+        var text = ev.target?.result;
+        if (typeof text === "string") {
+          setLogText(text);
+          var r = analyzeLog(text);
+          if (r) setResult(r);
+        }
+      };
+      reader.readAsText(file);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+    function sevColor(s) {
+      var m = { critical: "red", high: "orange", medium: "yellow", low: "blue" };
+      return m[s] || "gray";
+    }
+    function sevLabel(s) {
+      var m = { critical: _("sev.critical"), high: _("sev.high"), medium: _("sev.medium"), low: _("sev.low") };
+      return m[s] || s;
+    }
+    function catLabel(c) {
+      var km = { memory: "cat.memory", mod: "cat.mod", net: "cat.net", render: "cat.render", jvm: "cat.jvm", crash: "cat.crash", general: "cat.general" };
+      return _(km[c] || "cat.other");
+    }
+    function catColor(c) {
+      var m = { memory: "red", mod: "red", net: "yellow", render: "orange", jvm: "purple", crash: "red", general: "cyan" };
+      return m[c] || "gray";
+    }
+    return /* @__PURE__ */ api.React.createElement(C.VStack, { align: "stretch", spacing: 3, p: 4 }, /* @__PURE__ */ api.React.createElement(C.HStack, { justify: "space-between", align: "center" }, /* @__PURE__ */ api.React.createElement(C.HStack, { spacing: 2 }, /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "md", fontWeight: "bold" }, _("crash.title")), /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: "red", variant: "subtle", fontSize: "2xs" }, _("crash.quickSummary"))), /* @__PURE__ */ api.React.createElement(C.Button, { size: "xs", variant: "ghost", onClick: props.close }, _("crash.close"))), instanceInfo ? /* @__PURE__ */ api.React.createElement(C.Box, { p: 1.5, bg: "rgba(49,130,206,0.08)", borderRadius: "sm" }, /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "xs", color: "blue.200" }, instanceInfo)) : null, /* @__PURE__ */ api.React.createElement(C.Divider, null), loading ? /* @__PURE__ */ api.React.createElement(C.Box, { p: 4, textAlign: "center" }, /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "sm" }, statusText)) : /* @__PURE__ */ api.React.createElement(api.React.Fragment, null, statusText ? /* @__PURE__ */ api.React.createElement(C.Box, { p: 2, bg: "rgba(229,62,62,0.1)", borderRadius: "md" }, /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "xs", color: "orange.200" }, statusText)) : null, result && result.issues.length > 0 ? /* @__PURE__ */ api.React.createElement(C.Box, null, /* @__PURE__ */ api.React.createElement(C.HStack, { spacing: 2, mb: 2, flexWrap: "wrap" }, /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: "red", variant: "solid", fontSize: "2xs" }, _("sev.critical") + ": " + result.criticalCount), /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: "orange", variant: "solid", fontSize: "2xs" }, _("sev.high") + ": " + result.highCount), /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: "yellow", variant: "solid", fontSize: "2xs" }, _("sev.medium") + ": " + result.medCount), /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: "blue", variant: "solid", fontSize: "2xs" }, _("sev.low") + ": " + result.lowCount), /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "xs", className: "secondary-text" }, _("settings.totalLines", String(result.totalLines)))), /* @__PURE__ */ api.React.createElement(C.VStack, { align: "stretch", spacing: 1, maxH: "240px", overflowY: "auto" }, result.issues.slice(0, 8).map(function(issue, idx) {
+      return /* @__PURE__ */ api.React.createElement(C.Box, { key: idx, p: 1.5, bg: "rgba(255,255,255,0.03)", borderRadius: "sm" }, /* @__PURE__ */ api.React.createElement(C.HStack, { spacing: 2, align: "center", mb: 1 }, /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: sevColor(issue.severity), variant: "solid", fontSize: "2xs" }, sevLabel(issue.severity)), /* @__PURE__ */ api.React.createElement(C.Badge, { colorScheme: catColor(issue.category), variant: "subtle", fontSize: "2xs" }, catLabel(issue.category)), /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "xs", fontWeight: "medium", noOfLines: 1 }, lang === "zh" ? issue.titleZh : issue.titleEn)), /* @__PURE__ */ api.React.createElement(C.Box, { bg: "rgba(49,130,206,0.1)", borderLeft: "2px solid", borderColor: "blue.400", p: 1, borderRadius: "sm" }, /* @__PURE__ */ api.React.createElement(C.Text, { fontSize: "xs", whiteSpace: "pre-wrap", lineHeight: 1.4, color: "blue.200" }, _("settings.suggestion") + ": " + (lang === "zh" ? issue.fixZh : issue.fixEn))));
+    }))) : /* @__PURE__ */ api.React.createElement(C.Box, null, /* @__PURE__ */ api.React.createElement(
+      C.Box,
+      {
+        as: "textarea",
+        value: logText,
+        onChange: function(e) {
+          setLogText(e.target.value);
+        },
+        placeholder: lang === "zh" ? "\u7C98\u8D34\u5D29\u6E83\u62A5\u544A\u6216\u65E5\u5FD7\u5185\u5BB9..." : "Paste crash report or log content...",
+        h: "120px",
+        p: 2,
+        fontSize: "xs",
+        fontFamily: "monospace",
+        borderWidth: "1px",
+        borderColor: "whiteAlpha.300",
+        borderRadius: "md",
+        bg: "rgba(0,0,0,0.3)",
+        color: "inherit",
+        resize: "vertical",
+        w: "100%",
+        _placeholder: { opacity: 0.4 }
+      }
+    ), /* @__PURE__ */ api.React.createElement(C.HStack, { spacing: 2, mt: 2 }, /* @__PURE__ */ api.React.createElement(C.Button, { size: "sm", colorScheme: "blue", onClick: handleAnalyze, isDisabled: !logText.trim() }, _("app.analyze")), /* @__PURE__ */ api.React.createElement(C.Button, { size: "xs", variant: "outline", onClick: function() {
+      if (fileRef.current) fileRef.current.click();
+    } }, _("settings.selectFile"))), /* @__PURE__ */ api.React.createElement("input", { ref: fileRef, type: "file", accept: ".log,.txt", style: { display: "none" }, onChange: handleFileChange }))));
+  };
+}
+
 // src/index.ts
 function createExtension(api) {
+  var host = api.getHostContext();
   return {
     homeWidget: {
       title: "Log Analysis",
@@ -940,7 +1071,34 @@ function createExtension(api) {
     },
     settingsPage: {
       Component: createSettingsPage(api)
-    }
+    },
+    customModal: {
+      key: "crash-analyzer",
+      title: "Crash Analyzer",
+      size: "lg",
+      isCentered: true,
+      scrollBehavior: "inside",
+      Component: createCrashAnalyzer(api)
+    },
+    slots: (function() {
+      var slotReg = {};
+      slotReg["ui.game_error.window_operations"] = {
+        getItems: function(context) {
+          return [{
+            children: "\u76F4\u63A5\u5206\u6790",
+            onClick: function() {
+              host.actions.openCustomModal("crash-analyzer", {
+                launchingId: context.launchingId,
+                instanceId: context.instanceId,
+                summary: context.summary,
+                javaInfo: context.javaInfo
+              });
+            }
+          }];
+        }
+      };
+      return slotReg;
+    })()
   };
 }
 var TOKEN = document.currentScript?.dataset?.extensionToken || "";
